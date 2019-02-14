@@ -1,6 +1,7 @@
 import javax.crypto.*;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -18,14 +19,14 @@ public class CifradoAES {
     // Se puede acceder a sus partes. Se le llama Spec. Transparente.
     public static SecretKeySpec obtenrClaveTransparente(String miClave) throws UnsupportedEncodingException, NoSuchAlgorithmException {
         MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
-        byte[] miClaveEnBytes =  messageDigest.digest(miClave.getBytes("utf8")); // Múltiplo de 16
+        byte[] miClaveEnBytes =  messageDigest.digest(miClave.getBytes(StandardCharsets.UTF_8)); // Múltiplo de 16
         return null;
     }
 
     public static String encriptar(String mensaje, SecretKey clave) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException, BadPaddingException, IllegalBlockSizeException {
         Cipher cipher = Cipher.getInstance(cifrado);
         cipher.init(Cipher.ENCRYPT_MODE, clave);
-        byte[] encVal = cipher.doFinal(mensaje.getBytes("utf8"));
+        byte[] encVal = cipher.doFinal(mensaje.getBytes(StandardCharsets.UTF_8));
         return Base64.getEncoder().encodeToString(encVal);  // Se necesitan que los bloques sean uniformes y múltiplo de 16.
     }
 
