@@ -5,11 +5,19 @@ import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.Base64;
 
 public class CifradoAES {
 
     private static String cifrado = "AES";
+    public static String HashToHex(byte[] digest){
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < digest.length; i++) {
+            sb.append(Integer.toHexString(digest[i] & 0xFF | 0x100).substring(1, 3));
+        }
+        return sb.toString();
+    };
     private static SecretKey obtenerClaveOpaca(int longitud) throws NoSuchAlgorithmException {
         KeyGenerator claveInstancia = KeyGenerator.getInstance(cifrado);
         claveInstancia.init(longitud); // Por defecto es 128b.
@@ -17,10 +25,11 @@ public class CifradoAES {
     }
 
     // Se puede acceder a sus partes. Se le llama Spec. Transparente.
-    public static SecretKeySpec obtenrClaveTransparente(String miClave) throws UnsupportedEncodingException, NoSuchAlgorithmException {
-        MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
-        byte[] miClaveEnBytes =  messageDigest.digest(miClave.getBytes(StandardCharsets.UTF_8)); // Múltiplo de 16
-        return null;
+    public static SecretKeySpec obtenerClaveTransparente(String miClave) throws NoSuchAlgorithmException {
+        MessageDigest messageDigest = MessageDigest.getInstance("SHA-256"); // Múltiplo de 16
+        byte[] miClaveEnBytes =  messageDigest.digest(miClave.getBytes(StandardCharsets.UTF_8)); // Se serializa la clave en UTF-8
+        byte[] miClaveSHA2 = Arrays.copyOf(miClaveEnBytes, 16); // Se recogen los primeros 16 bytes del hash generado.
+        return new SecretKeySpec(miClaveSHA2, cifrado);
     }
 
     public static String encriptar(String mensaje, SecretKey clave) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException, BadPaddingException, IllegalBlockSizeException {
@@ -53,5 +62,13 @@ public class CifradoAES {
 
         System.out.println("Criptograma: " + criptograma);
         System.out.println("Desencriptando: " + desencriptar(criptograma, miClaveOpaca));
+
+        System.out.println("Con clave transparente: " + mensaje);
+        SecretKeySpec claveTransparente = CifradoAES.obtenerClaveTransparente(miClave);
+        criptograma = CifradoAES.encriptar(mensaje, claveTransparente);
+
+        System.out.println("Criptograma: " + criptograma);
+        System.out.println("Desencriptando: " + desencriptar(criptograma, claveTransparente));
+
     }
 }
